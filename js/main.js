@@ -1,24 +1,38 @@
-const outputDiv = document.getElementById('output');
-const departureKey = "9dcc27c7806146308e9a817303722483";//Reseplanerare 3
-const placeKey = "c3b5d6f2b9a1421185d7fa4e7e951daf";//Platsuppslag
-const originInput = document.getElementById('origin');
-const dataList = document.getElementById('destinationOrigin');
-const submitButton = document.getElementById('submitSearch');
+//Reseplanerare 3
+const departureKey = "9dcc27c7806146308e9a817303722483";
+//Platsuppslag
+const placeKey = "c3b5d6f2b9a1421185d7fa4e7e951daf"; 
+const outputDiv = document.getElementById('departuresOutput');
+const originInput = document.getElementById('originInput');
+const originSearchButton = document.getElementById('originSearch');
 const form = document.getElementById('searchForm');
+const originSearchOutput = document.getElementById('originSearchOutput');
+const destinationOutput = document.getElementById('destinationSearchOutput');
+const departureSearchButton = document.getElementById('searchSubmit');
+const originDiv = document.getElementById('originInputs');
+const destinationDiv = document.getElementById('destinationInputs');
+const destinationSearchButton = document.getElementById('destinationSearch');
+const destinationInput = document.getElementById('destinationInput');
+
+//Error handling for the input field
+//Be able to click on the departure box to get more info
+//Bind a the display departures to the departure submit button
+//Date and time for departure
+//Styling!!
 
 form.addEventListener('submit', function(event){
     event.preventDefault(); 
 });
 
-submitButton.addEventListener('click', function(){
+originSearchButton.addEventListener('click', function(){
     const inputValue = originInput.value;
-    showDestinations(inputValue);
+    fetchDestinations(inputValue);
 })
 
-/*originInput.addEventListener('keyup', function(){
-    const inputValue = originInput.value;
-    showDestinations(inputValue);
-});*/
+destinationSearchButton.addEventListener('click', function(){
+    const inputValue = destinationInput.value;
+    //fetchDestinations(inputValue);
+})
 
 function fetchDepartures(){
     fetch('https://cors-anywhere.herokuapp.com/http://api.sl.se/api2/TravelplannerV3/trip.json?key=' + departureKey + '&originId=9625&destId=1002&searchForArrival=0&lang=sv')
@@ -31,8 +45,8 @@ function fetchDepartures(){
       });
 }
 
-function showDestinations(inputValue){
-    fetch('https://cors-anywhere.herokuapp.com/http://api.sl.se/api2/typeahead.json?key=' + placeKey + '&searchstring=' + inputValue)
+function fetchDestinations(inputValue){
+    fetch('https://cors-anywhere.herokuapp.com/http://api.sl.se/api2/typeahead.json?key=' + placeKey + '&MaxResults=5&searchstring=' + inputValue)
       .then((response) => response.json())
       .then((destinationData) => {
           console.log(destinationData);
@@ -43,39 +57,81 @@ function showDestinations(inputValue){
       });
 }
 
-/*function displayDestinationOptions(destinationData){
-    let destinationOption = ``;
-    console.log(destinationData.ResponseData);
-
-    for(i in destinationData.ResponseData){
-        destinationOption += `<option value="${destinationData.ResponseData[i].Name}" id="${destinationData.ResponseData[i].SiteId}"></option>`;
-    }
-
-    dataList.innerHTML += destinationOption;
-    if (dataList.innerHTML == ""){
-        alert("Hej");
-    }
-}*/
-
 function displayDestinationOptions(destinationData){
-    const outputDiv = document.getElementById('searchOutput');
-    let destinationOption = `<ul>`;
+    //destinationDiv eller originDiv, originSearchOutput eller destinationSearchOutput, origin output list eller destinationlist
+    //4 argument
 
-    for(i in destinationData.ResponseData){
-        destinationOption += `<li>${destinationData.ResponseData[i].Name}
-        <input type="hidden" value="${destinationData.ResponseData[i].SiteId}"></li>`;
+    if(originSearchOutput.classList.contains('hidden')){
+        originSearchOutput.classList.remove('hidden');
     }
-    destinationOption += `</ul>`;
-    outputDiv.innerHTML = destinationOption;
+    
+    const outputList = document.getElementById('originSearchOutputList');
+    outputList.innerHTML = "";
+    
+    for(i in destinationData.ResponseData){
+        const listOption = document.createElement('li');
+        const hiddenInput = document.createElement('input');
+        hiddenInput.type = "hidden";
+        //Add the value of sideID to the hidden input field
+        hiddenInput.value = destinationData.ResponseData[i].SiteId;
+        //The textContent of the listOption will be the name of the destination
+        listOption.textContent = destinationData.ResponseData[i].Name;
+        listOption.appendChild(hiddenInput);
 
+        //Bind the listOptions to the selectOrigin function
+        listOption.addEventListener('click', selectOrigin);
+        outputList.appendChild(listOption);
 
-
-
-
+    }
 }
 
-fetchDepartures();
+//Will take two arguments of the div and the list to be outputted
+function selectOrigin(){
+    //origin search output and origin div 
+    //2 arguments
 
+    inputValue = this.querySelector('input').value;
+    console.log(inputValue);
+    
+    console.log(this.textContent);
+
+    //The new value of originInput will be the textContent of the destination list item
+    originInput.value = this.textContent;
+
+    const hiddenInput = document.createElement('input');
+    hiddenInput.type = "hidden";
+    hiddenInput.value = inputValue;
+    hiddenInput.id = "originID";
+    if(originDiv.querySelector("input[type=hidden]")){
+         //If the hidden input field already exists, remove it
+        originDiv.removeChild(originDiv.querySelector("input[type=hidden]"));
+    }
+    //Add the hidden input field after the text input field
+    originDiv.insertBefore(hiddenInput, originDiv.children[2]);
+
+    originSearchOutput.classList.add('hidden');
+
+    showSearchButton();
+}
+
+function showSearchButton(){
+    //If both the hidden input fields are present in the two divs, show the departures search button
+    if(originDiv.querySelector("input[type=hidden]") 
+    && destinationDiv.querySelector("input[type=hidden]")){
+        departureSearchButton.classList.remove('hidden');
+    }
+}
+
+/*const testar = document.getElementById('testar');
+
+testar.addEventListener('click', function(){
+    if(document.getElementById('originID')){
+        //If the hidden input fields exist on the page, show the submit button
+    console.log("Hej")
+    }
+})*/
+
+fetchDepartures();
 
 function displayDepartures(departureData){
     console.log(departureData);
