@@ -9,39 +9,37 @@
     <title>SL Reseplanerare</title>
 </head>
 <body>
-
     <main>
+        <div class="form-wrapper">
+            <h1>SL Reseplanerare</h1>
 
-            <div class="form-wrapper">
-                    <h1>SL Reseplanerare</h1>
+            <form id="searchForm">
 
-                 <form id="searchForm">
+                <div id="originInputs">
+                    <label for="originInput" >Från:</label>
+                    <input type="text" id="originInput" placeholder="Din startpunkt">
+                    <button id="originSearch">Sök</button>
+                </div>
 
-                    <div id="originInputs">
-                        <label for="originInput" >Från:</label>
-                        <input type="text" id="originInput" placeholder="Din startpunkt">
-                        <button id="originSearch">Sök</button>
-                    </div>
+                <div id="originSearchOutput">
+                    <ul id="originSearchOutputList"></ul>
+                </div>
 
-                    <div id="originSearchOutput">
-                        <ul id="originSearchOutputList"></ul>
-                    </div>
+                <div id="destinationInputs">
+                    <label for="destination">Till:</label>
+                    <input type="text" id="destinationInput" placeholder="Din destination">
+                    <button id="destinationSearch">Sök</button>
+                </div>
 
-                    <div id="destinationInputs">
-                        <label for="destination">Till:</label>
-                        <input type="text" id="destinationInput" placeholder="Din destination">
-                        <button id="destinationSearch">Sök</button>
-                    </div>
+                <div id="destinationSearchOutput">
+                    <ul id="destinationSearchOutputList"></ul>
+                </div>
 
-                    <div id="destinationSearchOutput">
-                        <ul id="destinationSearchOutputList"></ul>
-                    </div>
+                <button id="searchSubmit" class="departures-button hidden">Visa avgångar</button>
 
-                    <button id="searchSubmit" class="departures-button hidden">Visa avgångar</button>
+            </form>
 
-                </form>
-
-            </div>
+        </div><!--form-wrapper-->
        
         <div class="wrapper">
             <div id="departuresOutput"></div>
