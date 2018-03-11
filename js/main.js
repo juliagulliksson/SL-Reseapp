@@ -22,6 +22,8 @@ const destinationOutputList = document.getElementById('destinationSearchOutputLi
 //Date and time for departure
 //Styling!!
 
+//the destination and origin functions can be one, but not the select function, they will be two
+
 form.addEventListener('submit', function(event){
     event.preventDefault(); 
 });
@@ -191,7 +193,7 @@ function showSearchButton(){
 }
 
 function displayDepartures(departureData){
-    //console.log(departureData);
+    console.log(departureData);
     /*let destinations = `
       <p>  Från: ${departureData.Trip[0].LegList.Leg[0].Origin.name} </p>
       <p>  Till: ${departureData.Trip[0].LegList.Leg.slice(-1)[0].Destination.name} </p>
@@ -199,11 +201,22 @@ function displayDepartures(departureData){
     outputDiv.innerHTML += destinations;*/
 
     let departureInfo = ``;
-    departureInfo += `${departureData.Trip[0].LegList.Leg[0].Origin.name} &#10142;
-    ${departureData.Trip[0].LegList.Leg.slice(-1)[0].Destination.name}`
+
+ 
+
     //Loop for displaying the departures
     for(i in departureData.Trip){
-        departureInfo += `<div class="trip-wrapper">`;
+
+           //The departure time and arrival time
+    departureInfo += `<div class="departure-wrapper"><p>
+    ${departureData.Trip[i].LegList.Leg[0].Origin.time} &#10142;
+    ${departureData.Trip[i].LegList.Leg.slice(-1)[0].Destination.time}</p>`;
+
+    //The departure station and arrival station
+    departureInfo += `<p>${departureData.Trip[0].LegList.Leg[0].Origin.name} &#10142;
+    ${departureData.Trip[i].LegList.Leg.slice(-1)[0].Destination.name}</p>`;
+
+        departureInfo += `<div class="trip-wrapper hidden">`;
         
         for(j in departureData.Trip[i].LegList.Leg){
 
@@ -242,12 +255,31 @@ function displayDepartures(departureData){
 
            departureInfo += `</div>`;
            
+    
+           
         }
         
         departureInfo += `</div>`;
+        departureInfo += `</div>`;
+        
     }
 
     outputDiv.innerHTML += departureInfo;
+
+    unfoldDepartures();
+
    
 }
 
+function unfoldDepartures(){
+    const clickDivs = outputDiv.querySelectorAll('div.departure-wrapper');
+
+    console.log(clickDivs[0].lastChild);
+   
+    for(i = 0; i < clickDivs.length; i++);
+    
+    clickDivs[i].addEventListener('click', function(){
+        console.log("hej");
+        //this.lastChild.classList.toggle('hidden');
+    })
+}
