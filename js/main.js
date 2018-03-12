@@ -18,8 +18,7 @@ const destinationOutputList = document.getElementById('destinationSearchOutputLi
 
 //Error handling for the input field
 //Be able to click on the departure box to get more info
-//Bind a the display departures to the departure submit button
-//Date and time for departure
+
 //Styling!!
 
 //the destination and origin functions can be one, but not the select function, they will be two
@@ -135,16 +134,7 @@ function selectOrigin(){
     //The new value of originInput will be the textContent of the destination list item
     originInput.value = this.textContent;
 
-    const hiddenInput = document.createElement('input');
-    hiddenInput.type = "hidden";
-    hiddenInput.value = inputValue;
-    hiddenInput.id = "originID";
-    if(originDiv.querySelector("input[type=hidden]")){
-         //If the hidden input field already exists, remove it
-        originDiv.removeChild(originDiv.querySelector("input[type=hidden]"));
-    }
-    //Add the hidden input field after the text input field
-    originDiv.insertBefore(hiddenInput, originDiv.children[2]);
+    createInputField("originID", originDiv);
 
     originSearchOutput.classList.add('hidden');
 
@@ -152,8 +142,6 @@ function selectOrigin(){
 }
 
 function selectDestination(){
-    
-    console.log(this);
 
     inputValue = this.querySelector('input').value;
     console.log(inputValue);
@@ -163,22 +151,31 @@ function selectDestination(){
     //The new value of originInput will be the textContent of the destination list item
     destinationInput.value = this.textContent;
 
-    const hiddenInput = document.createElement('input');
-    hiddenInput.type = "hidden";
-    hiddenInput.value = inputValue;
-    hiddenInput.id = "destinationID";
-
-    if(destinationDiv.querySelector("input[type=hidden]")){
-         //If the hidden input field already exists, remove it
-         destinationDiv.removeChild(destinationDiv.querySelector("input[type=hidden]"));
-    }
-
-    //Add the hidden input field after the text input field
-    destinationDiv.insertBefore(hiddenInput, destinationDiv.children[2]);
+    createInputField("destinationID", destinationDiv);
 
     destinationSearchOutput.classList.add('hidden');
 
     showSearchButton();
+}
+
+function createInputField(id, div){
+
+    if(div.querySelector("input[type=hidden]")){
+        //If the hidden input field already exists, remove it
+        div.removeChild(div.querySelector("input[type=hidden]"));
+   }
+    
+    const hiddenInput = document.createElement('input');
+    hiddenInput.type = "hidden";
+    hiddenInput.value = inputValue;
+    hiddenInput.id = id;
+
+ 
+
+    //Add the hidden input field after the text input field
+    div.insertBefore(hiddenInput, div.children[2]);
+
+    
 }
 
 function showSearchButton(){
@@ -197,13 +194,15 @@ function displayDepartures(departureData){
     //Loop for displaying the departures
     for(i in departureData.Trip){
         departureInfo += `<div class="departure-wrapper">`;
+        let departureTrip = departureData.Trip[i].LegList.Leg;
 
         //The departure time and arrival time, origin name and destination name
         departureInfo += 
-        `<p>${departureData.Trip[i].LegList.Leg[0].Origin.time} &#10142;
-        ${departureData.Trip[i].LegList.Leg.slice(-1)[0].Destination.time}</p>
+        `<p>${departureTrip[0].Origin.time} &#10142;
+        ${departureTrip.slice(-1)[0].Destination.time}</p>
+
         <p>${departureData.Trip[0].LegList.Leg[0].Origin.name} &#10142;
-        ${departureData.Trip[i].LegList.Leg.slice(-1)[0].Destination.name}</p>`;
+        ${departureTrip.slice(-1)[0].Destination.name}</p>`;
 
         departureInfo += `<div class="trip-wrapper hidden">`;
         
@@ -224,18 +223,14 @@ function displayDepartures(departureData){
                     <p>  Ankomst: ${departure.Destination.time} </p>
                 `;
             }
-           
         }
-
         departureInfo += `</div>`;
-        
         departureInfo += `</div>`;
-        
     }
 
     outputDiv.innerHTML += departureInfo;
 
-    //Bind the event listener to the departure-wrapper-div
+    //Run the function to add event listener to all of the departure-wrapper-divs
     addUnfoldListener();
    
 }
@@ -249,6 +244,7 @@ function addUnfoldListener(){
     
         clickDivs[i].addEventListener('click', function(){
             console.log("hej");
+            //Unfold or hide the trip-wrapper-div
             this.lastChild.classList.toggle('hidden');
         });
         
