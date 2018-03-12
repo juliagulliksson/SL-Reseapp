@@ -17,11 +17,8 @@ const originOutputList = document.getElementById('originSearchOutputList');
 const destinationOutputList = document.getElementById('destinationSearchOutputList');
 
 //Error handling for the input field
-//Be able to click on the departure box to get more info
 
-//Styling!!
-
-//the destination and origin functions can be one, but not the select function, they will be two
+//Fix styling for search boxes
 
 form.addEventListener('submit', function(event){
     event.preventDefault(); 
@@ -29,19 +26,19 @@ form.addEventListener('submit', function(event){
 
 originSearchButton.addEventListener('click', function(){
     const inputValue = originInput.value;
-    fetchDestinations(inputValue, true);
-})
+    fetchDestinations(inputValue, originDiv, originSearchOutput, originOutputList);
+});
 
 destinationSearchButton.addEventListener('click', function(){
     const inputValue = destinationInput.value;
-    fetchDestinations(inputValue, false);
-})
+    fetchDestinations(inputValue, destinationDiv, destinationSearchOutput, destinationOutputList);
+});
 
 departureSearchButton.addEventListener('click', function(){
     const destinationID = document.getElementById('destinationID').value;
     const originID = document.getElementById('originID').value;
     fetchDepartures(originID, destinationID);
-})
+});
 
 function fetchDepartures(originID, destinationID){
     fetch('https://cors-anywhere.herokuapp.com/http://api.sl.se/api2/TravelplannerV3/trip.json?key=' + departureKey + '&originId=' + originID + '&destId=' + destinationID + '&searchForArrival=0&lang=sv')
@@ -54,84 +51,52 @@ function fetchDepartures(originID, destinationID){
       });
 }
 
-function fetchDestinations(inputValue, origin){
+function fetchDestinations(inputValue, div, searchOutput, list){
     fetch('https://cors-anywhere.herokuapp.com/http://api.sl.se/api2/typeahead.json?key=' + placeKey + '&MaxResults=5&searchstring=' + inputValue)
       .then((response) => response.json())
       .then((destinationData) => {
-          if (origin) {
-            displayOriginOptions(destinationData)
-          } else {
-            displayDestinationOptions(destinationData)
-          }
+          displayStationOptions(destinationData, div, searchOutput, list);
       })
       .catch((error) => {
           console.log(error);
       });
 }
 
-function displayOriginOptions(destinationData){
-    //destinationDiv eller originDiv, originSearchOutput eller destinationSearchOutput, origin output list eller destinationlist
-    //4 argument
 
-    if(originSearchOutput.classList.contains('hidden')){
-        originSearchOutput.classList.remove('hidden');
+function displayStationOptions(destinationData, div, searchOutput, list){
+
+    if(searchOutput.classList.contains('hidden')){
+        searchOutput.classList.remove('hidden');
     }
     
-    originOutputList.innerHTML = "";
+    list.innerHTML = "";
     
     for(i in destinationData.ResponseData){
         const listOption = document.createElement('li');
         const hiddenInput = document.createElement('input');
         hiddenInput.type = "hidden";
-        //Add the value of sideID to the hidden input field
+        //Add the value of the destination's SiteID to the hidden input field
         hiddenInput.value = destinationData.ResponseData[i].SiteId;
         //The textContent of the listOption will be the name of the destination
         listOption.textContent = destinationData.ResponseData[i].Name;
         listOption.appendChild(hiddenInput);
 
-        //Bind the listOptions to the selectOrigin function
-        listOption.addEventListener('click', selectOrigin);
-        originOutputList.appendChild(listOption);
-        //console.log(listOption);
+        //Binds different functions depending on if it's the origin div or not
+        if(div == originDiv){
+            listOption.addEventListener('click', selectOrigin);
+        }else{
+            listOption.addEventListener('click', selectDestination);
+        }
+        
+        list.appendChild(listOption);
 
-    }
-}
-
-function displayDestinationOptions(destinationData){
-    
-    if(destinationSearchOutput.classList.contains('hidden')){
-        destinationSearchOutput.classList.remove('hidden');
-    }
-    
-    destinationOutputList.innerHTML = "";
-    
-    for(i in destinationData.ResponseData){
-        const listOption = document.createElement('li');
-        const hiddenInput = document.createElement('input');
-        hiddenInput.type = "hidden";
-        //Add the value of sideID to the hidden input field
-        hiddenInput.value = destinationData.ResponseData[i].SiteId;
-        //The textContent of the listOption will be the name of the destination
-        listOption.textContent = destinationData.ResponseData[i].Name;
-        listOption.appendChild(hiddenInput);
-
-        //Bind the listOptions to the selectOrigin function
-        listOption.addEventListener('click', selectDestination);
-        destinationOutputList.appendChild(listOption);
-       
     }
 }
 
 function selectOrigin(){
-
-    console.log(this);
-
     inputValue = this.querySelector('input').value;
-    console.log(inputValue);
-    
-    console.log(this.textContent);
 
-    //The new value of originInput will be the textContent of the destination list item
+    //The new value of originInput will be the textContent of the list item
     originInput.value = this.textContent;
 
     createInputField("originID", originDiv);
@@ -142,13 +107,9 @@ function selectOrigin(){
 }
 
 function selectDestination(){
-
     inputValue = this.querySelector('input').value;
-    console.log(inputValue);
-    
-    console.log(this.textContent);
 
-    //The new value of originInput will be the textContent of the destination list item
+    //The new value of destinationInput will be the textContent of the list item
     destinationInput.value = this.textContent;
 
     createInputField("destinationID", destinationDiv);
@@ -170,12 +131,9 @@ function createInputField(id, div){
     hiddenInput.value = inputValue;
     hiddenInput.id = id;
 
- 
-
     //Add the hidden input field after the text input field
     div.insertBefore(hiddenInput, div.children[2]);
 
-    
 }
 
 function showSearchButton(){
@@ -189,16 +147,19 @@ function showSearchButton(){
 function displayDepartures(departureData){
     console.log(departureData);
 
+    outputDiv.innerHTML = "";
+
     let departureInfo = ``;
 
     //Loop for displaying the departures
     for(i in departureData.Trip){
-        departureInfo += `<div class="departure-wrapper">`;
+        departureInfo += `<div class="departure-wrapper">
+        <span class="plus-sign">&#43;</span>`;
         let departureTrip = departureData.Trip[i].LegList.Leg;
 
         //The departure time and arrival time, origin name and destination name
         departureInfo += 
-        `<p>${departureTrip[0].Origin.time} &#10142;
+        `<p class="departure-time">${departureTrip[0].Origin.time} &#10142;
         ${departureTrip.slice(-1)[0].Destination.time}</p>
 
         <p>${departureData.Trip[0].LegList.Leg[0].Origin.name} &#10142;
@@ -207,14 +168,17 @@ function displayDepartures(departureData){
         departureInfo += `<div class="trip-wrapper hidden">`;
         
         for (j in departureData.Trip[i].LegList.Leg) {
+            departureInfo += `<div class="individual-trips">`;
 
             const departure = departureData.Trip[i].LegList.Leg[j];
 
             if (departure.type == "WALK") {
                 departureInfo += `<p>  Gå till ${departure.Destination.name}</p>`;
             } else {
-                departureInfo += `<p> Ta ${departure.Product.name} 
-                &#10142; ${departure.Destination.name}</p>`;
+                departureInfo += `<p>${departure.Origin.name}</p>`;
+                departureInfo += `<p>${departure.Product.name}</p>`;
+                departureInfo += `<p> ${departure.Destination.name}</p>`;
+                
             }
 
             if (departure.type != "WALK") {
@@ -223,6 +187,7 @@ function displayDepartures(departureData){
                     <p>  Ankomst: ${departure.Destination.time} </p>
                 `;
             }
+            departureInfo += `</div>`;
         }
         departureInfo += `</div>`;
         departureInfo += `</div>`;
@@ -244,8 +209,10 @@ function addUnfoldListener(){
     
         clickDivs[i].addEventListener('click', function(){
             console.log("hej");
+            this.querySelector('span.plus-sign').classList.toggle('active');
             //Unfold or hide the trip-wrapper-div
             this.lastChild.classList.toggle('hidden');
+          
         });
         
     }
