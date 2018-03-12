@@ -49,7 +49,6 @@ function fetchDepartures(originID, destinationID){
       .then((response) => response.json())
       .then((departureData) => {
           displayDepartures(departureData);
-          console.log(departureData)
       })
       .catch((error) => {
           console.log(error);
@@ -60,7 +59,6 @@ function fetchDestinations(inputValue, origin){
     fetch('https://cors-anywhere.herokuapp.com/http://api.sl.se/api2/typeahead.json?key=' + placeKey + '&MaxResults=5&searchstring=' + inputValue)
       .then((response) => response.json())
       .then((destinationData) => {
-          console.log(destinationData);
           if (origin) {
             displayOriginOptions(destinationData)
           } else {
@@ -153,11 +151,8 @@ function selectOrigin(){
     showSearchButton();
 }
 
-
-//Will take two arguments of the div and the list to be outputted
 function selectDestination(){
-    //origin search output and origin div 
-    //2 arguments
+    
     console.log(this);
 
     inputValue = this.querySelector('input').value;
@@ -172,10 +167,12 @@ function selectDestination(){
     hiddenInput.type = "hidden";
     hiddenInput.value = inputValue;
     hiddenInput.id = "destinationID";
+
     if(destinationDiv.querySelector("input[type=hidden]")){
          //If the hidden input field already exists, remove it
          destinationDiv.removeChild(destinationDiv.querySelector("input[type=hidden]"));
     }
+
     //Add the hidden input field after the text input field
     destinationDiv.insertBefore(hiddenInput, destinationDiv.children[2]);
 
@@ -194,57 +191,32 @@ function showSearchButton(){
 
 function displayDepartures(departureData){
     console.log(departureData);
-    /*let destinations = `
-      <p>  Från: ${departureData.Trip[0].LegList.Leg[0].Origin.name} </p>
-      <p>  Till: ${departureData.Trip[0].LegList.Leg.slice(-1)[0].Destination.name} </p>
-    `;
-    outputDiv.innerHTML += destinations;*/
 
     let departureInfo = ``;
 
- 
-
     //Loop for displaying the departures
     for(i in departureData.Trip){
+        departureInfo += `<div class="departure-wrapper">`;
 
-           //The departure time and arrival time
-    departureInfo += `<div class="departure-wrapper"><p>
-    ${departureData.Trip[i].LegList.Leg[0].Origin.time} &#10142;
-    ${departureData.Trip[i].LegList.Leg.slice(-1)[0].Destination.time}</p>`;
-
-    //The departure station and arrival station
-    departureInfo += `<p>${departureData.Trip[0].LegList.Leg[0].Origin.name} &#10142;
-    ${departureData.Trip[i].LegList.Leg.slice(-1)[0].Destination.name}</p>`;
+        //The departure time and arrival time, origin name and destination name
+        departureInfo += 
+        `<p>${departureData.Trip[i].LegList.Leg[0].Origin.time} &#10142;
+        ${departureData.Trip[i].LegList.Leg.slice(-1)[0].Destination.time}</p>
+        <p>${departureData.Trip[0].LegList.Leg[0].Origin.name} &#10142;
+        ${departureData.Trip[i].LegList.Leg.slice(-1)[0].Destination.name}</p>`;
 
         departureInfo += `<div class="trip-wrapper hidden">`;
         
-        for(j in departureData.Trip[i].LegList.Leg){
+        for (j in departureData.Trip[i].LegList.Leg) {
 
             const departure = departureData.Trip[i].LegList.Leg[j];
 
-            departureInfo += `<div class="destination-wrapper">`;
-
-       
-
-            if (departure.direction != undefined) {
-                departureInfo += `<p>  Ta ${departure.Product.name} 
-                &#10142; ${departure.direction}</p>`;
-            } else if (departure.type == "WALK") {
+            if (departure.type == "WALK") {
                 departureInfo += `<p>  Gå till ${departure.Destination.name}</p>`;
             } else {
                 departureInfo += `<p> Ta ${departure.Product.name} 
                 &#10142; ${departure.Destination.name}</p>`;
             }
-
-           /* if (departure.direction != undefined) {
-                departureInfo += `<p>  Ta ${departure.Product.name} 
-                &#10142; ${departure.direction}</p>`;
-            } else if (departure.type == "WALK") {
-                departureInfo += `<p>  Gå till ${departure.Destination.name}</p>`;
-            } else {
-                departureInfo += `<p> Ta ${departure.Product.name} 
-                &#10142; ${departure.Destination.name}</p>`;
-            }*/
 
             if (departure.type != "WALK") {
                 departureInfo += `
@@ -252,34 +224,33 @@ function displayDepartures(departureData){
                     <p>  Ankomst: ${departure.Destination.time} </p>
                 `;
             }
-
-           departureInfo += `</div>`;
-           
-    
            
         }
-        
+
         departureInfo += `</div>`;
+        
         departureInfo += `</div>`;
         
     }
 
     outputDiv.innerHTML += departureInfo;
 
-    unfoldDepartures();
-
+    //Bind the event listener to the departure-wrapper-div
+    addUnfoldListener();
    
 }
 
-function unfoldDepartures(){
+function addUnfoldListener(){
     const clickDivs = outputDiv.querySelectorAll('div.departure-wrapper');
 
-    console.log(clickDivs[0].lastChild);
-   
-    for(i = 0; i < clickDivs.length; i++);
+    console.log(clickDivs[0]);
+
+    for(i = 0; i < clickDivs.length; i++){
     
-    clickDivs[i].addEventListener('click', function(){
-        console.log("hej");
-        //this.lastChild.classList.toggle('hidden');
-    })
+        clickDivs[i].addEventListener('click', function(){
+            console.log("hej");
+            this.lastChild.classList.toggle('hidden');
+        });
+        
+    }
 }
