@@ -20,22 +20,26 @@ form.addEventListener('submit', function(event){
 });
 
 originSearchButton.addEventListener('click', function(){
+    displayLoader(originSearchOutput);
     const inputValue = originInput.value;
     fetchDestinations(inputValue, originSearchOutput, originOutputList);
 });
 
 destinationSearchButton.addEventListener('click', function(){
+    displayLoader(destinationSearchOutput);
     const inputValue = destinationInput.value;
     fetchDestinations(inputValue, destinationSearchOutput, destinationOutputList);
 });
 
 departureSearchButton.addEventListener('click', function(){
+    displayLoader(outputDiv);
     const destinationID = destinationDiv.querySelector("input[type=hidden]").value;
     const originID = originDiv.querySelector("input[type=hidden]").value;
     fetchDepartures(originID, destinationID);
 });
 
 function fetchDepartures(originID, destinationID){
+
     fetch('https://cors-anywhere.herokuapp.com/http://api.sl.se/api2/TravelplannerV3/trip.json?key=' + departureKey + '&originId=' + originID + '&destId=' + destinationID + '&searchForArrival=0&lang=sv')
       .then((response) => response.json())
       .then((departureData) => {
@@ -52,6 +56,7 @@ function fetchDestinations(inputValue, searchOutput, list){
        fetch('https://cors-anywhere.herokuapp.com/http://api.sl.se/api2/typeahead.json?key=' + placeKey + '&MaxResults=5&searchstring=' + inputValue)
       .then((response) => response.json())
       .then((destinationData) => {
+          removeLoader(list);
           displayStationOptions(destinationData, searchOutput, list);
       })
       .catch((error) => {
@@ -60,6 +65,18 @@ function fetchDestinations(inputValue, searchOutput, list){
     } else {
         inputValue = "";
     }
+}
+
+function displayLoader(div){
+    const loadingDiv = document.createElement('div');
+    loadingDiv.classList.add('loader');
+    div.appendChild(loadingDiv);
+}
+
+function removeLoader(list){
+    const div = list.parentElement;
+    const loadingDiv = div.querySelector('div.loader');
+    div.removeChild(loadingDiv);
 }
 
 function validateForm(inputValue){
@@ -82,14 +99,17 @@ function displayStationOptions(destinationData, searchOutput, list){
         searchOutput.classList.remove('hidden');
     }
     list.innerHTML = "";
+    errorDiv.innerHTML = "";
     
-    for(i in destinationData.ResponseData){
+    for(let i in destinationData.ResponseData){
         const listOption = document.createElement('li');
         const hiddenInput = document.createElement('input');
         hiddenInput.type = "hidden";
+
         //Add the value of the destination's SiteID to the hidden input field
         hiddenInput.value = destinationData.ResponseData[i].SiteId;
-        //The textContent of the listOption will be the name of the destination
+
+        //The textContent of the listOption will be the name of the choosen destination
         listOption.textContent = destinationData.ResponseData[i].Name;
         listOption.appendChild(hiddenInput);
 
@@ -163,7 +183,7 @@ function displayDepartures(departureData){
     let departureInfo = ``;
 
     //Loop to display the departures
-    for(i in departureData.Trip){
+    for(let i in departureData.Trip){
         departureInfo += `<div class="departure-wrapper">
         <span class="plus-sign">&#43;</span>`;
 
@@ -179,7 +199,7 @@ function displayDepartures(departureData){
 
         departureInfo += `<div class="trip-wrapper hidden">`;
         
-        for (j in departureData.Trip[i].LegList.Leg) {
+        for (let j in departureData.Trip[i].LegList.Leg) {
             const departure = departureData.Trip[i].LegList.Leg[j];
             
             if (departure.type != "WALK") {
@@ -212,7 +232,7 @@ function addUnfoldListener(){
     for(i = 0; i < clickDivs.length; i++){
     
         clickDivs[i].addEventListener('click', function(){
-            //Toggle the class "active" to change color of plus sign
+            //Toggle the class "active" to change the color of the plus sign
             this.querySelector('span.plus-sign').classList.toggle('active');
             //Show or hide the trip-wrapper-div
             this.lastChild.classList.toggle('hidden');
