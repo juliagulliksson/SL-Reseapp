@@ -4,13 +4,12 @@ https://github.com/juliagulliksson/ajax-js
 
 APIer: 
 
-SL Platsuppslag
+SL Platsuppslag - Information om hållplatser baserat på delar av hållplatsens namn.
 
-https://www.trafiklab.se/api/sl-platsuppslag
+Länk: https://www.trafiklab.se/api/sl-platsuppslag
 
-SL Reseplanerare 3
-
-https://www.trafiklab.se/api/sl-reseplanerare-3
+SL Reseplanerare 3 - Reseförslag från A till B inom Stockholms län med SL-trafik.
+Länk: https://www.trafiklab.se/api/sl-reseplanerare-3
 
 Använt:
 * SASS

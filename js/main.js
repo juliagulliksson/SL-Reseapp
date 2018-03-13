@@ -15,10 +15,6 @@ const originOutputList = document.getElementById('originSearchOutputList');
 const destinationOutputList = document.getElementById('destinationSearchOutputList');
 const errorDiv = document.getElementById('error');
 
-//Error handling for the input field
-
-
-
 form.addEventListener('submit', function(event){
     event.preventDefault(); 
 });
@@ -46,21 +42,32 @@ function fetchDepartures(originID, destinationID){
           displayDepartures(departureData);
       })
       .catch((error) => {
-          console.log(error);
           displayErrors(error);
       });
 }
 
 function fetchDestinations(inputValue, searchOutput, list){
-    fetch('https://cors-anywhere.herokuapp.com/http://api.sl.se/api2/typeahead.json?key=' + placeKey + '&MaxResults=5&searchstring=' + inputValue)
+    const validate = validateForm(inputValue);
+    if (validate) {
+       fetch('https://cors-anywhere.herokuapp.com/http://api.sl.se/api2/typeahead.json?key=' + placeKey + '&MaxResults=5&searchstring=' + inputValue)
       .then((response) => response.json())
       .then((destinationData) => {
           displayStationOptions(destinationData, searchOutput, list);
       })
       .catch((error) => {
-          console.log(error);
           displayErrors(error);
       });
+    } else {
+        inputValue = "";
+    }
+}
+
+function validateForm(inputValue){
+    if (!inputValue.replace(/^\s+/g, '').length) { //Input field is empty
+          return false;
+      } else { // Form is correct 
+          return true;
+    }
 }
 
 function displayErrors(error){
@@ -69,13 +76,11 @@ function displayErrors(error){
     errorDiv.innerHTML = `<p class="error">Error: ${errorCapitalized}</p>`;
 }
 
-
 function displayStationOptions(destinationData, searchOutput, list){
 
     if(searchOutput.classList.contains('hidden')){
         searchOutput.classList.remove('hidden');
     }
-    
     list.innerHTML = "";
     
     for(i in destinationData.ResponseData){
@@ -96,7 +101,6 @@ function displayStationOptions(destinationData, searchOutput, list){
         }
         
         list.appendChild(listOption);
-
     }
 }
 
@@ -106,10 +110,10 @@ function selectOrigin(){
         //If the hidden input field already exists, remove it
         originDiv.removeChild(originDiv.querySelector("input[type=hidden]"));
    }
-    input = this.querySelector('input');
+    const hiddenInput = this.querySelector('input');
 
     //Add the hidden input field after the text input field
-    originDiv.insertBefore(input, originDiv.children[2]);
+    originDiv.insertBefore(hiddenInput, originDiv.children[2]);
 
     //The new value of originInput will be the textContent of the list item
     originInput.value = this.textContent;
@@ -126,10 +130,10 @@ function selectDestination(){
         //If the hidden input field already exists, remove it
         destinationDiv.removeChild(destinationDiv.querySelector("input[type=hidden]"));
    }
-    input = this.querySelector('input');
+    const hiddenInput = this.querySelector('input');
 
     //Add the hidden input field after the text input field
-    destinationDiv.insertBefore(input, destinationDiv.children[2]);
+    destinationDiv.insertBefore(hiddenInput, destinationDiv.children[2]);
 
     //The new value of destinationInput will be the textContent of the list item
     destinationInput.value = this.textContent;
@@ -150,15 +154,15 @@ function showSearchButton(){
 }
 
 function displayDepartures(departureData){
+
     if(departureData.Message == "Proxy error"){
         displayErrors(departureData);
     }
-
     outputDiv.innerHTML = "";
 
     let departureInfo = ``;
 
-    //Loop for displaying the departures
+    //Loop to display the departures
     for(i in departureData.Trip){
         departureInfo += `<div class="departure-wrapper">
         <span class="plus-sign">&#43;</span>`;
@@ -192,17 +196,14 @@ function displayDepartures(departureData){
 
                 departureInfo += `</div>`;
             }
-
         }
         departureInfo += `</div>`;
         departureInfo += `</div>`;
     }
-
     outputDiv.innerHTML += departureInfo;
 
-    //Run the function to add event listener to all of the departure-wrapper-divs
+    //Run function to add event listener to all of the departure-wrapper-divs
     addUnfoldListener();
-   
 }
 
 function addUnfoldListener(){
@@ -217,7 +218,6 @@ function addUnfoldListener(){
             this.lastChild.classList.toggle('hidden');
           
         });
-        
     }
 }
 
