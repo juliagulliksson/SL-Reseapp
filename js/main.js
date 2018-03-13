@@ -1,6 +1,4 @@
-//Reseplanerare 3
 const departureKey = "9dcc27c7806146308e9a817303722483";
-//Platsuppslag
 const placeKey = "c3b5d6f2b9a1421185d7fa4e7e951daf"; 
 const outputDiv = document.getElementById('departuresOutput');
 const originInput = document.getElementById('originInput');
@@ -15,10 +13,11 @@ const destinationSearchButton = document.getElementById('destinationSearch');
 const destinationInput = document.getElementById('destinationInput');
 const originOutputList = document.getElementById('originSearchOutputList');
 const destinationOutputList = document.getElementById('destinationSearchOutputList');
+const errorDiv = document.getElementById('error');
 
 //Error handling for the input field
 
-//Fix styling for search boxes
+
 
 form.addEventListener('submit', function(event){
     event.preventDefault(); 
@@ -26,17 +25,17 @@ form.addEventListener('submit', function(event){
 
 originSearchButton.addEventListener('click', function(){
     const inputValue = originInput.value;
-    fetchDestinations(inputValue, originDiv, originSearchOutput, originOutputList);
+    fetchDestinations(inputValue, originSearchOutput, originOutputList);
 });
 
 destinationSearchButton.addEventListener('click', function(){
     const inputValue = destinationInput.value;
-    fetchDestinations(inputValue, destinationDiv, destinationSearchOutput, destinationOutputList);
+    fetchDestinations(inputValue, destinationSearchOutput, destinationOutputList);
 });
 
 departureSearchButton.addEventListener('click', function(){
-    const destinationID = document.getElementById('destinationID').value;
-    const originID = document.getElementById('originID').value;
+    const destinationID = destinationDiv.querySelector("input[type=hidden]").value;
+    const originID = originDiv.querySelector("input[type=hidden]").value;
     fetchDepartures(originID, destinationID);
 });
 
@@ -48,22 +47,30 @@ function fetchDepartures(originID, destinationID){
       })
       .catch((error) => {
           console.log(error);
+          displayErrors(error);
       });
 }
 
-function fetchDestinations(inputValue, div, searchOutput, list){
+function fetchDestinations(inputValue, searchOutput, list){
     fetch('https://cors-anywhere.herokuapp.com/http://api.sl.se/api2/typeahead.json?key=' + placeKey + '&MaxResults=5&searchstring=' + inputValue)
       .then((response) => response.json())
       .then((destinationData) => {
-          displayStationOptions(destinationData, div, searchOutput, list);
+          displayStationOptions(destinationData, searchOutput, list);
       })
       .catch((error) => {
           console.log(error);
+          displayErrors(error);
       });
 }
 
+function displayErrors(error){
+    const errorMessage = error.ErrorDetails.errorText;
+    const errorCapitalized = capitalizeFirstLetter(errorMessage);
+    errorDiv.innerHTML = `<p class="error">Error: ${errorCapitalized}</p>`;
+}
 
-function displayStationOptions(destinationData, div, searchOutput, list){
+
+function displayStationOptions(destinationData, searchOutput, list){
 
     if(searchOutput.classList.contains('hidden')){
         searchOutput.classList.remove('hidden');
@@ -81,8 +88,8 @@ function displayStationOptions(destinationData, div, searchOutput, list){
         listOption.textContent = destinationData.ResponseData[i].Name;
         listOption.appendChild(hiddenInput);
 
-        //Binds different functions depending on if it's the origin div or not
-        if(div == originDiv){
+        //Binds different functions depending on if it's the origin list or not
+        if(list == originOutputList){
             listOption.addEventListener('click', selectOrigin);
         }else{
             listOption.addEventListener('click', selectDestination);
@@ -94,46 +101,44 @@ function displayStationOptions(destinationData, div, searchOutput, list){
 }
 
 function selectOrigin(){
-    inputValue = this.querySelector('input').value;
+
+    if(originDiv.querySelector("input[type=hidden]")){
+        //If the hidden input field already exists, remove it
+        originDiv.removeChild(originDiv.querySelector("input[type=hidden]"));
+   }
+    input = this.querySelector('input');
+
+    //Add the hidden input field after the text input field
+    originDiv.insertBefore(input, originDiv.children[2]);
 
     //The new value of originInput will be the textContent of the list item
     originInput.value = this.textContent;
 
-    createInputField("originID", originDiv);
-
     originSearchOutput.classList.add('hidden');
 
     showSearchButton();
+
+    originOutputList.innerHTML = "";
 }
 
 function selectDestination(){
-    inputValue = this.querySelector('input').value;
+    if(destinationDiv.querySelector("input[type=hidden]")){
+        //If the hidden input field already exists, remove it
+        destinationDiv.removeChild(destinationDiv.querySelector("input[type=hidden]"));
+   }
+    input = this.querySelector('input');
+
+    //Add the hidden input field after the text input field
+    destinationDiv.insertBefore(input, destinationDiv.children[2]);
 
     //The new value of destinationInput will be the textContent of the list item
     destinationInput.value = this.textContent;
 
-    createInputField("destinationID", destinationDiv);
-
     destinationSearchOutput.classList.add('hidden');
 
     showSearchButton();
-}
 
-function createInputField(id, div){
-
-    if(div.querySelector("input[type=hidden]")){
-        //If the hidden input field already exists, remove it
-        div.removeChild(div.querySelector("input[type=hidden]"));
-   }
-    
-    const hiddenInput = document.createElement('input');
-    hiddenInput.type = "hidden";
-    hiddenInput.value = inputValue;
-    hiddenInput.id = id;
-
-    //Add the hidden input field after the text input field
-    div.insertBefore(hiddenInput, div.children[2]);
-
+    destinationOutputList.innerHTML = "";
 }
 
 function showSearchButton(){
@@ -145,7 +150,9 @@ function showSearchButton(){
 }
 
 function displayDepartures(departureData){
-    console.log(departureData);
+    if(departureData.Message == "Proxy error"){
+        displayErrors(departureData);
+    }
 
     outputDiv.innerHTML = "";
 
@@ -155,6 +162,7 @@ function displayDepartures(departureData){
     for(i in departureData.Trip){
         departureInfo += `<div class="departure-wrapper">
         <span class="plus-sign">&#43;</span>`;
+
         let departureTrip = departureData.Trip[i].LegList.Leg;
 
         //The departure time and arrival time, origin name and destination name
@@ -168,26 +176,23 @@ function displayDepartures(departureData){
         departureInfo += `<div class="trip-wrapper hidden">`;
         
         for (j in departureData.Trip[i].LegList.Leg) {
-            departureInfo += `<div class="individual-trips">`;
-
             const departure = departureData.Trip[i].LegList.Leg[j];
-
-            if (departure.type == "WALK") {
-                departureInfo += `<p>  Gå till ${departure.Destination.name}</p>`;
-            } else {
-                departureInfo += `<p>${departure.Origin.name}</p>`;
-                departureInfo += `<p>${departure.Product.name}</p>`;
-                departureInfo += `<p> ${departure.Destination.name}</p>`;
-                
-            }
-
+            
             if (departure.type != "WALK") {
-                departureInfo += `
-                    <p>  Avgång: ${departure.Origin.time} </p>
-                    <p>  Ankomst: ${departure.Destination.time} </p>
-                `;
+                departureInfo += `<div class="individual-trips">`;
+
+                const productName = departure.Product.name;
+                const productCapitalized = capitalizeFirstLetter(productName);
+    
+                departureInfo += `<p class="destination-info">${departure.Origin.time} 
+                ${departure.Origin.name}</p>`;
+                departureInfo += `<span class="italic">${productCapitalized}</span>`;
+                departureInfo += `<p class="destination-info">${departure.Destination.time} 
+                ${departure.Destination.name}</p>`;
+
+                departureInfo += `</div>`;
             }
-            departureInfo += `</div>`;
+
         }
         departureInfo += `</div>`;
         departureInfo += `</div>`;
@@ -203,17 +208,19 @@ function displayDepartures(departureData){
 function addUnfoldListener(){
     const clickDivs = outputDiv.querySelectorAll('div.departure-wrapper');
 
-    console.log(clickDivs[0]);
-
     for(i = 0; i < clickDivs.length; i++){
     
         clickDivs[i].addEventListener('click', function(){
-            console.log("hej");
+            //Toggle the class "active" to change color of plus sign
             this.querySelector('span.plus-sign').classList.toggle('active');
-            //Unfold or hide the trip-wrapper-div
+            //Show or hide the trip-wrapper-div
             this.lastChild.classList.toggle('hidden');
           
         });
         
     }
+}
+
+function capitalizeFirstLetter(string) {
+    return string.charAt(0).toUpperCase() + string.slice(1);
 }
