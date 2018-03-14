@@ -1,6 +1,7 @@
 Julia Gulliksson
 
 https://github.com/juliagulliksson/ajax-js
+https://juliagulliksson.github.io/ajax-js/
 
 ###APIer: 
 

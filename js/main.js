@@ -14,25 +14,27 @@ const destinationInput = document.getElementById('destinationInput');
 const originOutputList = document.getElementById('originSearchOutputList');
 const destinationOutputList = document.getElementById('destinationSearchOutputList');
 const errorDiv = document.getElementById('error');
+const loaderWrapper = document.querySelector('div.loader-wrapper');
 
 form.addEventListener('submit', function(event){
     event.preventDefault(); 
 });
 
 originSearchButton.addEventListener('click', function(){
-    displayLoader(originSearchOutput);
+    displayLoader(originSearchOutput, originOutputList);
     const inputValue = originInput.value;
     fetchDestinations(inputValue, originSearchOutput, originOutputList);
 });
 
 destinationSearchButton.addEventListener('click', function(){
-    displayLoader(destinationSearchOutput);
+    displayLoader(destinationSearchOutput, destinationOutputList);
     const inputValue = destinationInput.value;
     fetchDestinations(inputValue, destinationSearchOutput, destinationOutputList);
 });
 
 departureSearchButton.addEventListener('click', function(){
-    displayLoader(outputDiv);
+    outputDiv.innerHTML = "";
+    displayLoader(loaderWrapper, false);
     const destinationID = destinationDiv.querySelector("input[type=hidden]").value;
     const originID = originDiv.querySelector("input[type=hidden]").value;
     fetchDepartures(originID, destinationID);
@@ -43,6 +45,7 @@ function fetchDepartures(originID, destinationID){
     fetch('https://cors-anywhere.herokuapp.com/http://api.sl.se/api2/TravelplannerV3/trip.json?key=' + departureKey + '&originId=' + originID + '&destId=' + destinationID + '&searchForArrival=0&lang=sv')
       .then((response) => response.json())
       .then((departureData) => {
+          removeLoader(loaderWrapper);
           displayDepartures(departureData);
       })
       .catch((error) => {
@@ -56,7 +59,7 @@ function fetchDestinations(inputValue, searchOutput, list){
        fetch('https://cors-anywhere.herokuapp.com/http://api.sl.se/api2/typeahead.json?key=' + placeKey + '&MaxResults=5&searchstring=' + inputValue)
       .then((response) => response.json())
       .then((destinationData) => {
-          removeLoader(list);
+          removeLoader(searchOutput);
           displayStationOptions(destinationData, searchOutput, list);
       })
       .catch((error) => {
@@ -67,16 +70,21 @@ function fetchDestinations(inputValue, searchOutput, list){
     }
 }
 
-function displayLoader(div){
-    const loadingDiv = document.createElement('div');
-    loadingDiv.classList.add('loader');
-    div.appendChild(loadingDiv);
+function displayLoader(div, list){
+    if(div.classList.contains('hidden')){
+        div.classList.remove('hidden');
+    }
+    if(list){
+        list.innerHTML = "";
+    }
+    errorDiv.innerHTML = "";
+    const loadingDiv = div.querySelector('div.loader');
+    loadingDiv.classList.remove('hidden');
 }
 
-function removeLoader(list){
-    const div = list.parentElement;
+function removeLoader(div){
     const loadingDiv = div.querySelector('div.loader');
-    div.removeChild(loadingDiv);
+    loadingDiv.classList.add('hidden');
 }
 
 function validateForm(inputValue){
@@ -94,12 +102,6 @@ function displayErrors(error){
 }
 
 function displayStationOptions(destinationData, searchOutput, list){
-
-    if(searchOutput.classList.contains('hidden')){
-        searchOutput.classList.remove('hidden');
-    }
-    list.innerHTML = "";
-    errorDiv.innerHTML = "";
     
     for(let i in destinationData.ResponseData){
         const listOption = document.createElement('li');
@@ -178,7 +180,6 @@ function displayDepartures(departureData){
     if(departureData.Message == "Proxy error"){
         displayErrors(departureData);
     }
-    outputDiv.innerHTML = "";
 
     let departureInfo = ``;
 
@@ -229,14 +230,13 @@ function displayDepartures(departureData){
 function addUnfoldListener(){
     const clickDivs = outputDiv.querySelectorAll('div.departure-wrapper');
 
-    for(i = 0; i < clickDivs.length; i++){
+    for(let i = 0; i < clickDivs.length; i++){
     
         clickDivs[i].addEventListener('click', function(){
             //Toggle the class "active" to change the color of the plus sign
             this.querySelector('span.plus-sign').classList.toggle('active');
             //Show or hide the trip-wrapper-div
             this.lastChild.classList.toggle('hidden');
-          
         });
     }
 }
