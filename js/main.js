@@ -21,27 +21,28 @@ form.addEventListener('submit', function(event){
 });
 
 originSearchButton.addEventListener('click', function(){
-    displayLoader(originSearchOutput, originOutputList);
+    originOutputList.innerHTML = "";
+    displayLoader(originSearchOutput);
     const inputValue = originInput.value;
     fetchDestinations(inputValue, originSearchOutput, originOutputList);
 });
 
 destinationSearchButton.addEventListener('click', function(){
-    displayLoader(destinationSearchOutput, destinationOutputList);
+    destinationOutputList.innerHTML = "";
+    displayLoader(destinationSearchOutput);
     const inputValue = destinationInput.value;
     fetchDestinations(inputValue, destinationSearchOutput, destinationOutputList);
 });
 
 departureSearchButton.addEventListener('click', function(){
     outputDiv.innerHTML = "";
-    displayLoader(loaderWrapper, false);
+    displayLoader(loaderWrapper);
     const destinationID = destinationDiv.querySelector("input[type=hidden]").value;
     const originID = originDiv.querySelector("input[type=hidden]").value;
     fetchDepartures(originID, destinationID);
 });
 
 function fetchDepartures(originID, destinationID){
-
     fetch('https://cors-anywhere.herokuapp.com/http://api.sl.se/api2/TravelplannerV3/trip.json?key=' + departureKey + '&originId=' + originID + '&destId=' + destinationID + '&searchForArrival=0&lang=sv')
       .then((response) => response.json())
       .then((departureData) => {
@@ -70,12 +71,9 @@ function fetchDestinations(inputValue, searchOutput, list){
     }
 }
 
-function displayLoader(div, list){
+function displayLoader(div){
     if(div.classList.contains('hidden')){
         div.classList.remove('hidden');
-    }
-    if(list){
-        list.innerHTML = "";
     }
     errorDiv.innerHTML = "";
     const loadingDiv = div.querySelector('div.loader');
@@ -111,7 +109,7 @@ function displayStationOptions(destinationData, searchOutput, list){
         //Add the value of the destination's SiteID to the hidden input field
         hiddenInput.value = destinationData.ResponseData[i].SiteId;
 
-        //The textContent of the listOption will be the name of the choosen destination
+        //The textContent of the listOption will be the name of the destination
         listOption.textContent = destinationData.ResponseData[i].Name;
         listOption.appendChild(hiddenInput);
 
